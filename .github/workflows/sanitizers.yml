@@ -1,0 +1,26 @@
+name: Sanitizers
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: smoke (asan-ubsan)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build with gcc warnings as errors
+        run: gcc -std=gnu17 -O2 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -o /tmp/beszel-docker-gate src/*.c
+      - name: Build with sanitizers
+        run: gcc -std=gnu17 -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=undefined -o beszel-docker-gate-san src/*.c
+      - run: bash .github/e2e/smoke.sh ./beszel-docker-gate-san
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=0
+          UBSAN_OPTIONS: print_stacktrace=1

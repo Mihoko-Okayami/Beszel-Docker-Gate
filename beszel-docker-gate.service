@@ -1,0 +1,10 @@
+[Unit]
+Description=Filters the Docker socket down to what the Beszel agent needs
+After=docker.socket docker.service
+
+[Service]
+ExecStart=/usr/local/sbin/beszel-docker-gate
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

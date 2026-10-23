@@ -1,0 +1,14 @@
+#!/sbin/openrc-run
+supervisor=supervise-daemon
+
+name="beszel-docker-gate"
+description="Filters the Docker socket down to what the Beszel agent needs"
+
+command="/usr/local/sbin/beszel-docker-gate"
+error_log="/var/log/${RC_SVCNAME}.log"
+respawn_delay=2
+respawn_period=60
+
+depend() {
+	after docker
+}
