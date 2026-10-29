@@ -40,10 +40,10 @@ static void stop(int sig) {
 void note(const char *format, ...) {
 	char stamp[40] = "", message[384];
 	time_t now = time(NULL);
-	struct tm *local = localtime(&now);
+	struct tm *utc = gmtime(&now);
 	va_list args;
-	if (local && !getenv("JOURNAL_STREAM")) {
-		snprintf(stamp, sizeof(stamp), "%04d-%02d-%02d %02d:%02d:%02d ", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+	if (utc && !getenv("JOURNAL_STREAM")) {
+		snprintf(stamp, sizeof(stamp), "%04d-%02d-%02dT%02d:%02d:%02dZ ", utc->tm_year + 1900, utc->tm_mon + 1, utc->tm_mday, utc->tm_hour, utc->tm_min, utc->tm_sec);
 	}
 	va_start(args, format);
 	vsnprintf(message, sizeof(message), format, args);

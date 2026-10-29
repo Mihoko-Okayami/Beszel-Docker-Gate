@@ -77,7 +77,7 @@ Everything else gets `403 Forbidden`, or `400 Bad Request` when the request is m
 Only changes are logged: denied requests, with the container that sent them, answers that could not be filtered, and Docker becoming unreachable or reachable again.
 
 ```
-2026-10-12 14:03:51 denied POST /v1.51/containers/create from container 3f2a1b9c0d4e
+2026-10-12T14:03:51Z denied POST /v1.51/containers/create from container 3f2a1b9c0d4e
 ```
 
 - OpenRC: `/var/log/beszel-docker-gate.log`
