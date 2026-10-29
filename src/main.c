@@ -127,9 +127,7 @@ static void drop(struct client *client) {
 	if (--active) return;
 	start = ((uintptr_t)buffers + page - 1) & ~(page - 1);
 	stop = ((uintptr_t)buffers + sizeof(buffers)) & ~(page - 1);
-	if (start < stop) {
-		madvise((void *)start, stop - start, MADV_DONTNEED);
-	}
+	madvise((void *)start, stop - start, MADV_DONTNEED);
 }
 
 static void reply(struct client *client, int code) {
