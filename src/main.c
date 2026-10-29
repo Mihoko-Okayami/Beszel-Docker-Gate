@@ -114,11 +114,7 @@ static int open_docker(void) {
 }
 
 static void drop(struct client *client) {
-	static long page;
-	uintptr_t start, stop;
-	if (!page) {
-		page = sysconf(_SC_PAGESIZE);
-	}
+	uintptr_t page = (uintptr_t)getpagesize(), start, stop;
 	close(client->fd);
 	if (client->docker >= 0) {
 		close(client->docker);
@@ -128,9 +124,9 @@ static void drop(struct client *client) {
 	client->docker = -1;
 	client->answer = NULL;
 	client->stage = FREE;
-	if (--active || page <= 0) return;
-	start = ((uintptr_t)buffers + (uintptr_t)page - 1) & ~((uintptr_t)page - 1);
-	stop = ((uintptr_t)buffers + sizeof(buffers)) & ~((uintptr_t)page - 1);
+	if (--active) return;
+	start = ((uintptr_t)buffers + page - 1) & ~(page - 1);
+	stop = ((uintptr_t)buffers + sizeof(buffers)) & ~(page - 1);
 	if (start < stop) {
 		madvise((void *)start, stop - start, MADV_DONTNEED);
 	}
