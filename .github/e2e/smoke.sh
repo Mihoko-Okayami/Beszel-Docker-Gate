@@ -16,15 +16,15 @@ wait_for() { for _ in $(seq 100); do eval "$1" && return 0; sleep 0.1; done; ret
 code() { curl -s --path-as-is -o "$WORK/body" -w '%{http_code}' --unix-socket "${3:-$SOCK}" -X "${2:-GET}" "http://localhost$1"; }
 trap '[ -z "$PID" ] || kill -KILL "$PID" 2>/dev/null; [ -z "$LOST" ] || kill -KILL "$LOST" 2>/dev/null; docker rm -f gate-smoke >/dev/null 2>&1' EXIT
 
-docker run -d --name gate-smoke -e SMOKE_SECRET=hunter2 -l smoke.pad="$(printf '%020000d' 0)" alpine:latest sleep 120 >/dev/null
+docker run -d --name gate-smoke -e SMOKE_SECRET=hunter2 -l smoke.pad="$(printf '%070000d' 0)" -l smoke.pad2="$(printf '%070000d' 0)" alpine:latest sleep 120 >/dev/null
 "$BIN" "$SOCK" /var/run/docker.sock 2>"$LOG" &
 PID=$!
 expect "listens on the given socket with mode 0660" 'wait_for "[ -S \"$SOCK\" ]" && [ "$(stat -c %a "$SOCK")" = 660 ]'
 expect "passes /version through" '[ "$(code /version)" = 200 ] && grep -q ApiVersion "$WORK/body"'
-expect "passes the container list through" '[ "$(code /containers/json)" = 200 ] && jq -e "any(.[]; .Labels[\"smoke.pad\"] | length == 20000)" "$WORK/body" >/dev/null'
+expect "passes the container list through" '[ "$(code /containers/json)" = 200 ] && jq -e "any(.[]; .Labels[\"smoke.pad\"] + .Labels[\"smoke.pad2\"] | length == 140000)" "$WORK/body" >/dev/null'
 expect "passes one-shot stats through" '[ "$(code "/containers/gate-smoke/stats?stream=0&one-shot=1")" = 200 ]'
 expect "passes the log tail through" '[ "$(code "/containers/gate-smoke/logs?stderr=1&stdout=1&tail=10&timestamps=1")" = 200 ]'
-expect "removes Env and LogConfig from container details" '[ "$(code /containers/gate-smoke/json)" = 200 ] && jq -e ".State and (.Config.Labels[\"smoke.pad\"] | length == 20000) and (.HostConfig | has(\"LogConfig\") | not) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null && ! grep -q hunter2 "$WORK/body"'
+expect "removes Env and LogConfig from container details" '[ "$(code /containers/gate-smoke/json)" = 200 ] && jq -e ".State and (.Config.Labels[\"smoke.pad\"] + .Config.Labels[\"smoke.pad2\"] | length == 140000) and (.HostConfig | has(\"LogConfig\") | not) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null && ! grep -q hunter2 "$WORK/body"'
 expect "removes the proxy settings from /info" '[ "$(code /info)" = 200 ] && jq -e ".OperatingSystem and .NCPU and (has(\"HttpProxy\") or has(\"HttpsProxy\") | not)" "$WORK/body" >/dev/null'
 expect "removes Env from image details" '[ "$(code /images/docker.io%2Flibrary%2Falpine:latest/json)" = 200 ] && jq -e "(.RepoDigests | length > 0) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null'
 expect "passes a Docker error through unfiltered" '[ "$(code /containers/gate-smoke-missing/json)" = 404 ] && grep -q "No such container" "$WORK/body"'

@@ -228,7 +228,7 @@ static void start(struct client *client, char *end) {
 		return;
 	}
 	if (request.strip) {
-		client->size = 2 * BUFFER_SIZE;
+		client->size = 16 * BUFFER_SIZE;
 		client->answer = malloc(client->size);
 		if (!client->answer) {
 			reply(client, 502);
