@@ -27,7 +27,6 @@
 #define CONNECTION_TIMEOUT 60
 
 static volatile sig_atomic_t running = 1;
-static sigset_t unblocked;
 static const char *listen_path = LISTEN_PATH;
 static struct sockaddr_un docker_address = { .sun_family = AF_UNIX };
 static char buffers[MAX_CLIENTS][BUFFER_SIZE] __attribute__((aligned(4096)));
@@ -141,8 +140,7 @@ static void reply(struct client *client, int code) {
 	const char *status = code == 400 ? "400 Bad Request" : code == 403 ? "403 Forbidden" : "502 Bad Gateway";
 	const char *message = code == 400 ? "bad request" : code == 403 ? "denied by beszel-docker-gate" : "beszel-docker-gate cannot answer";
 	char response[256];
-	int length;
-	length = snprintf(response, sizeof(response), "HTTP/1.1 %s\r\nContent-Type: application/json\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n{\"message\":\"%s\"}\n", status, strlen(message) + 15, message);
+	int length = snprintf(response, sizeof(response), "HTTP/1.1 %s\r\nContent-Type: application/json\r\nContent-Length: %zu\r\nConnection: close\r\n\r\n{\"message\":\"%s\"}\n", status, strlen(message) + 15, message);
 	if (length > 0 && (size_t)length < sizeof(response)) {
 		send(client->fd, response, (size_t)length, MSG_NOSIGNAL);
 	}
@@ -248,7 +246,7 @@ static void start(struct client *client, char *end) {
 
 static void receive(struct client *client) {
 	size_t from = client->used > 3 ? client->used - 3 : 0;
-	ssize_t n = recv(client->fd, client->buffer + client->used, BUFFER_SIZE - 1 - client->used, 0);
+	ssize_t n = recv(client->fd, client->buffer + client->used, BUFFER_SIZE - client->used, 0);
 	char *end;
 	if (n <= 0) {
 		if (n == 0 || errno != EAGAIN) {
@@ -257,11 +255,10 @@ static void receive(struct client *client) {
 		return;
 	}
 	client->used += (size_t)n;
-	client->buffer[client->used] = '\0';
 	end = memmem(client->buffer + from, client->used - from, "\r\n\r\n", 4);
 	if (end) {
 		start(client, end);
-	} else if (client->used == BUFFER_SIZE - 1) {
+	} else if (client->used == BUFFER_SIZE) {
 		refuse(client, 400, NULL);
 	}
 }
@@ -385,7 +382,7 @@ int main(int argc, char **argv) {
 	struct client *client;
 	int listener, pending;
 	unsigned int i;
-	sigset_t blocked;
+	sigset_t blocked, unblocked;
 	time_t now;
 	if (argc > 1) {
 		listen_path = argv[1];

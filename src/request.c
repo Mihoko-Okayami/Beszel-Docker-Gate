@@ -49,10 +49,10 @@ static int match(const char *pattern, char *const *segments, int count) {
 
 static int is_param(const char *param, size_t length, const char *allowed, size_t size) {
 	const char *digits = memchr(allowed, '#', size);
-	size_t prefix = digits ? (size_t)(digits - allowed) : size;
 	if (!digits) return length == size && !memcmp(param, allowed, size);
-	if (length <= prefix || memcmp(param, allowed, prefix)) return 0;
-	for (param += prefix, length -= prefix; length; param++, length--) {
+	size = (size_t)(digits - allowed);
+	if (length <= size || memcmp(param, allowed, size)) return 0;
+	for (param += size, length -= size; length; param++, length--) {
 		if (*param < '0' || *param > '9') return 0;
 	}
 	return 1;
