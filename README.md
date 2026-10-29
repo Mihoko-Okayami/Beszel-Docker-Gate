@@ -43,7 +43,7 @@ Mount the directory rather than the socket itself, so the agent keeps its access
 
 ### Podman
 
-With Podman, the gate needs two arguments: its own socket, then Podman's (`/run/podman/podman.sock`, opened by `podman.socket`):
+With Podman, the gate needs two arguments: its own socket, then Podman's (`/run/podman/podman.sock`, opened by `podman.socket` under systemd or the `podman` service under OpenRC):
 
 - OpenRC: add `command_args="/run/beszel-docker-gate/docker.sock /run/podman/podman.sock"` to `/etc/conf.d/beszel-docker-gate`, then run `rc-service beszel-docker-gate restart`
 - systemd: run `systemctl edit beszel-docker-gate` and add the lines below, then run `systemctl restart beszel-docker-gate`
