@@ -207,9 +207,8 @@ static void collect(struct client *client) {
 }
 
 static void start(struct client *client, char *end) {
-	static char text[BUFFER_SIZE + 256];
 	struct request request;
-	int code, length;
+	int code;
 	*end = '\0';
 	code = parse(client->buffer, &request);
 	if (code) {
@@ -229,8 +228,7 @@ static void start(struct client *client, char *end) {
 			return;
 		}
 	}
-	length = snprintf(text, sizeof(text), "%s %s %s\r\nHost: localhost\r\n%s%s%sConnection: close\r\n\r\n", request.method, request.target, request.version, request.agent ? "User-Agent: " : "", request.agent ? request.agent : "", request.agent ? "\r\n" : "");
-	if (length < 0 || (size_t)length >= sizeof(text) || send(client->docker, text, (size_t)length, MSG_NOSIGNAL) != length) {
+	if (dprintf(client->docker, "%s %s %s\r\nHost: localhost\r\n%s%s%sConnection: close\r\n\r\n", request.method, request.target, request.version, request.agent ? "User-Agent: " : "", request.agent ? request.agent : "", request.agent ? "\r\n" : "") < 0) {
 		reply(client, 502);
 		return;
 	}
