@@ -38,12 +38,12 @@ static void stop(int sig) {
 }
 
 void note(const char *format, ...) {
-	char stamp[32] = "", message[384];
+	char stamp[40] = "", message[384];
 	time_t now = time(NULL);
 	struct tm *local = localtime(&now);
 	va_list args;
 	if (local && !getenv("JOURNAL_STREAM")) {
-		strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S ", local);
+		snprintf(stamp, sizeof(stamp), "%04d-%02d-%02d %02d:%02d:%02d ", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
 	}
 	va_start(args, format);
 	vsnprintf(message, sizeof(message), format, args);

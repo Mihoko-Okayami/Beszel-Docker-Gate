@@ -158,7 +158,9 @@ const char *filter(struct client *client) {
 			chunked = strstr(line + 18, "chunked") != NULL;
 		}
 		if (!strncasecmp(line, "Content-Length:", 15)) {
-			content = strtoul(line + 15, NULL, 10);
+			for (line += 15 + strspn(line + 15, " \t"), content = 0; *line >= '0' && *line <= '9' && content <= MAX_ANSWER; line++) {
+				content = content * 10 + (size_t)(*line - '0');
+			}
 			sized = 1;
 		}
 	}
