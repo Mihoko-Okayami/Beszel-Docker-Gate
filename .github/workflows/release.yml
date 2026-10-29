@@ -25,7 +25,7 @@ jobs:
       - name: Build
         run: |
           for target in amd64: arm64:-aarch64 arm/v7:-armv7 arm/v6:-armv6; do
-            docker run --rm --platform "linux/${target%%:*}" -v "$PWD":/src -w /src alpine:latest sh -c "apk add --no-cache build-base fortify-headers && cc -O2 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fPIE -static-pie -s -o beszel-docker-gate${target#*:} src/*.c"
+            docker run --rm --platform "linux/${target%%:*}" -v "$PWD":/src -w /src alpine:latest sh -c "apk add --no-cache build-base fortify-headers && cc -std=gnu17 -O2 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fstack-clash-protection -fPIE -static-pie -s -o beszel-docker-gate${target#*:} src/*.c"
           done
       - uses: actions/attest@v4
         with:
