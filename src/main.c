@@ -260,20 +260,11 @@ static void receive(struct client *client) {
 }
 
 static void relay(struct client *client, short from_client, short from_docker) {
-	char ignored[512], *out;
+	char *out;
 	ssize_t n;
 	if (from_client & (POLLERR | POLLHUP | POLLNVAL)) {
 		drop(client);
 		return;
-	}
-	if (from_client & POLLIN) {
-		n = recv(client->fd, ignored, sizeof(ignored), 0);
-		if (n == 0) {
-			client->eof = 1;
-		} else if (n < 0 && errno != EAGAIN) {
-			drop(client);
-			return;
-		}
 	}
 	if (client->stage == COLLECT) {
 		if (from_docker) {
@@ -321,7 +312,6 @@ static void accept_clients(int listener, struct client *clients) {
 		client->fd = fd;
 		client->buffer = buffers[i];
 		active++;
-		client->eof = 0;
 		client->since = seconds();
 		client->used = 0;
 		client->sent = 0;
@@ -409,7 +399,7 @@ int main(int argc, char **argv) {
 			client = &clients[i];
 			pending = (client->stage == RELAY || client->stage == FLUSH) && client->sent < client->used;
 			fds[1 + 2 * i].fd = client->fd;
-			fds[1 + 2 * i].events = (short)((client->eof ? 0 : POLLIN) | (pending ? POLLOUT : 0));
+			fds[1 + 2 * i].events = (short)((client->stage == REQUEST ? POLLIN : 0) | (pending ? POLLOUT : 0));
 			fds[2 + 2 * i].fd = (client->stage == RELAY && !pending) || client->stage == COLLECT ? client->docker : -1;
 			fds[2 + 2 * i].events = POLLIN;
 		}

@@ -19,7 +19,6 @@ struct client {
 	enum stage stage;
 	int fd;
 	int docker;
-	int eof;
 	time_t since;
 	size_t used;
 	size_t sent;
