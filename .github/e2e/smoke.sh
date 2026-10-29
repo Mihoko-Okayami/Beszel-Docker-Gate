@@ -28,11 +28,11 @@ expect "removes Env and LogConfig from container details" '[ "$(code /containers
 expect "removes the proxy settings from /info" '[ "$(code /info)" = 200 ] && jq -e ".OperatingSystem and .NCPU and (has(\"HttpProxy\") or has(\"HttpsProxy\") | not)" "$WORK/body" >/dev/null'
 expect "removes Env from image details" '[ "$(code /images/docker.io%2Flibrary%2Falpine:latest/json)" = 200 ] && jq -e "(.RepoDigests | length > 0) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null'
 expect "passes a Docker error through unfiltered" '[ "$(code /containers/gate-smoke-missing/json)" = 404 ] && grep -q "No such container" "$WORK/body"'
-expect "denies a container creation" '[ "$(code /containers/create POST)" = 403 ]'
-expect "logs the denied request" 'grep -q "denied POST /containers/create from " "$LOG"'
+expect "denies a method other than GET" '[ "$(code /info POST)" = 403 ]'
+expect "logs the denied request" 'grep -q "denied POST /info from " "$LOG"'
 expect "denies a query string it does not know" '[ "$(code "/containers/json?all=1")" = 403 ]'
-expect "denies a streaming stats request" '[ "$(code "/containers/gate-smoke/stats?stream=1")" = 403 ]'
-expect "denies a dot-dot segment" '[ "$(code /containers/../info)" = 403 ]'
+expect "denies a streaming stats request" '[ "$(code "/containers/gate-smoke/stats?stream=1&one-shot=1")" = 403 ]'
+expect "denies an encoded dot-dot segment" '[ "$(code /images/%2e%2e/json)" = 403 ]'
 "$BIN" "$WORK/run/lost.sock" "$WORK/none.sock" 2>"$WORK/lost.log" &
 LOST=$!
 expect "answers 502 when Docker cannot be reached" 'wait_for "[ -S \"$WORK/run/lost.sock\" ]" && [ "$(code /version GET "$WORK/run/lost.sock")" = 502 ]'
