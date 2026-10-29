@@ -86,7 +86,7 @@ static void identify(int fd, char *who, size_t size) {
 
 static void set_group(void) {
 	struct stat docker;
-	if (stat(docker_address.sun_path, &docker) == 0 && chown(listen_path, (uid_t)-1, docker.st_gid) < 0) {
+	if (stat(docker_address.sun_path, &docker) == 0 && lchown(listen_path, (uid_t)-1, docker.st_gid) < 0) {
 		note("%s: %s", listen_path, strerror(errno));
 	}
 }
