@@ -26,7 +26,7 @@ expect "passes one-shot stats through" '[ "$(code "/containers/gate-smoke/stats?
 expect "passes the log tail through" '[ "$(code "/containers/gate-smoke/logs?stderr=1&stdout=1&tail=10&timestamps=1")" = 200 ]'
 expect "removes Env and LogConfig from container details" '[ "$(code /containers/gate-smoke/json)" = 200 ] && jq -e ".State and (.HostConfig | has(\"LogConfig\") | not) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null && ! grep -q hunter2 "$WORK/body"'
 expect "removes the proxy settings from /info" '[ "$(code /info)" = 200 ] && jq -e ".OperatingSystem and .NCPU and (has(\"HttpProxy\") or has(\"HttpsProxy\") | not)" "$WORK/body" >/dev/null'
-expect "removes Env from image details" '[ "$(code /images/alpine:latest/json)" = 200 ] && jq -e "(.RepoDigests | length > 0) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null'
+expect "removes Env from image details" '[ "$(code /images/docker.io%2Flibrary%2Falpine:latest/json)" = 200 ] && jq -e "(.RepoDigests | length > 0) and (.Config | has(\"Env\") | not)" "$WORK/body" >/dev/null'
 expect "denies a container creation" '[ "$(code /containers/create POST)" = 403 ]'
 expect "logs the denied request" 'grep -q "denied POST /containers/create from " "$LOG"'
 expect "denies a query string it does not know" '[ "$(code "/containers/json?all=1")" = 403 ]'
