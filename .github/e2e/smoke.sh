@@ -16,6 +16,9 @@ wait_for() { for _ in $(seq 100); do eval "$1" && return 0; sleep 0.1; done; ret
 code() { curl -s --path-as-is -o "$WORK/body" -w '%{http_code}' --unix-socket "${3:-$SOCK}" -X "${2:-GET}" "http://localhost$1"; }
 trap '[ -z "$PID" ] || kill -KILL "$PID" 2>/dev/null; [ -z "$LOST" ] || kill -KILL "$LOST" 2>/dev/null; docker rm -f gate-smoke >/dev/null 2>&1' EXIT
 
+timeout -k 5 10 "$BIN" --help 2>"$WORK/help.log"
+STATUS=$?
+expect "--help prints the usage and fails" '[ "$STATUS" = 1 ] && grep -q "usage: " "$WORK/help.log"'
 docker run -d --name gate-smoke -e SMOKE_SECRET=hunter2 -l smoke.pad="$(printf '%070000d' 0)" -l smoke.pad2="$(printf '%070000d' 0)" alpine:latest sleep 120 >/dev/null
 "$BIN" "$SOCK" /var/run/docker.sock 2>"$LOG" &
 PID=$!

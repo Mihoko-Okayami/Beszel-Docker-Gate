@@ -366,6 +366,12 @@ int main(int argc, char **argv) {
 	unsigned int i;
 	sigset_t blocked, unblocked;
 	time_t now;
+	for (i = 1; i < (unsigned int)argc; i++) {
+		if (i > 2 || !argv[i][0] || argv[i][0] == '-') {
+			note("usage: %s [socket] [docker socket]", argv[0]);
+			return 1;
+		}
+	}
 	if (argc > 1) {
 		listen_path = argv[1];
 	}
