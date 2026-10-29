@@ -34,7 +34,7 @@ int is_alnum(int c) {
 }
 
 static int is_name(int c) {
-	return is_alnum(c) || c == '-' || c == '_' || c == '.' || c == ':' || c == '@';
+	return is_alnum(c) || c == '-' || c == '_' || c == '.' || c == ':' || c == '@' || c == '[' || c == ']';
 }
 
 static int match(const char *pattern, char *const *segments, int count) {
