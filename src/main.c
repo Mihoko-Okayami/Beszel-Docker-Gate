@@ -364,7 +364,8 @@ static int open_listener(void) {
 		fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 		if (fd < 0) return -1;
 	}
-	if (bind(fd, (struct sockaddr *)&address, sizeof(address)) == 0 && chmod(listen_path, 0660) == 0 && listen(fd, SOMAXCONN) == 0) {
+	umask(0117);
+	if (bind(fd, (struct sockaddr *)&address, sizeof(address)) == 0 && listen(fd, SOMAXCONN) == 0) {
 		set_group();
 		return fd;
 	}
