@@ -98,7 +98,6 @@ static const struct rule *find_rule(const char *target) {
 	}
 	path[n] = '\0';
 	query = target[i] ? target + i + 1 : target + i;
-	if (path[0] != '/') return NULL;
 	for (segment = path + 1; segment; segment = slash ? slash + 1 : NULL) {
 		slash = strchr(segment, '/');
 		if (slash) {

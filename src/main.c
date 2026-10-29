@@ -174,7 +174,6 @@ static void finish(struct client *client, const char *problem) {
 	close(client->docker);
 	client->docker = -1;
 	client->stage = FLUSH;
-	client->sent = 0;
 	if (!problem && status && status != 200) return;
 	if (!problem) {
 		problem = status ? filter(client) : "unreadable answer";
@@ -245,7 +244,6 @@ static void start(struct client *client, char *end) {
 	}
 	client->stage = request.strip ? COLLECT : RELAY;
 	client->used = 0;
-	client->sent = 0;
 }
 
 static void receive(struct client *client) {
@@ -328,7 +326,6 @@ static void accept_clients(int listener, struct client *clients) {
 		if (fd < 0) return;
 		client->stage = REQUEST;
 		client->fd = fd;
-		client->docker = -1;
 		client->buffer = buffers[i];
 		active++;
 		client->eof = 0;
@@ -385,7 +382,7 @@ int main(int argc, char **argv) {
 	const char *docker_path = argc > 2 ? argv[2] : DOCKER_PATH;
 	struct timespec second = { .tv_sec = 1 };
 	struct client *client;
-	int listener, busy, pending;
+	int listener, pending;
 	unsigned int i;
 	sigset_t blocked;
 	time_t now;
@@ -414,7 +411,6 @@ int main(int argc, char **argv) {
 		clients[i].docker = -1;
 	}
 	while (running) {
-		busy = 0;
 		for (i = 0; i < MAX_CLIENTS; i++) {
 			client = &clients[i];
 			pending = (client->stage == RELAY || client->stage == FLUSH) && client->sent < client->used;
@@ -422,11 +418,10 @@ int main(int argc, char **argv) {
 			fds[1 + 2 * i].events = (short)((client->eof ? 0 : POLLIN) | (pending ? POLLOUT : 0));
 			fds[2 + 2 * i].fd = (client->stage == RELAY && !pending) || client->stage == COLLECT ? client->docker : -1;
 			fds[2 + 2 * i].events = POLLIN;
-			busy += client->stage != FREE;
 		}
-		fds[0].fd = busy < MAX_CLIENTS ? listener : -1;
+		fds[0].fd = active < MAX_CLIENTS ? listener : -1;
 		fds[0].events = POLLIN;
-		if (ppoll(fds, 1 + 2 * MAX_CLIENTS, busy ? &second : NULL, &unblocked) < 0) continue;
+		if (ppoll(fds, 1 + 2 * MAX_CLIENTS, active ? &second : NULL, &unblocked) < 0) continue;
 		if (fds[0].revents) {
 			accept_clients(listener, clients);
 		}
