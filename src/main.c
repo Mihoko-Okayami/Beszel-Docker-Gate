@@ -22,7 +22,7 @@
 
 #define LISTEN_PATH "/run/beszel-docker-gate/docker.sock"
 #define DOCKER_PATH "/var/run/docker.sock"
-#define MAX_CLIENTS 16
+#define MAX_CLIENTS 64
 #define REQUEST_TIMEOUT 10
 #define CONNECTION_TIMEOUT 60
 

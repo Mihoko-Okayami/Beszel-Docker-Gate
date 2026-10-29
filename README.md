@@ -91,7 +91,7 @@ Paths are read the way Docker reads them, `%2F` included, and must match the tab
 
 For container and image details and `/info`, it reads Docker's whole answer (up to 4 MiB), removes the settings listed above, and sends the result. If the answer cannot be read as JSON, the agent gets `502 Bad Gateway` and none of the answer.
 
-It is a single process with no threads and an 8 KiB buffer per connection, serves up to 16 connections at a time (Beszel uses a few), gives its memory back once no connection is open, and uses no CPU while idle. A connection that has not sent its request after 10 seconds, or is still open after 60 seconds, is closed. The release binary is a static PIE: no dependency, address randomisation, stack protector, fortified memory copies.
+It is a single process with no threads and an 8 KiB buffer per connection, serves up to 64 connections at a time (Beszel uses a few, or one per running container with Docker 24 and older), gives its memory back once no connection is open, and uses no CPU while idle. A connection that has not sent its request after 10 seconds, or is still open after 60 seconds, is closed. The release binary is a static PIE: no dependency, address randomisation, stack protector, fortified memory copies.
 
 ## License
 
